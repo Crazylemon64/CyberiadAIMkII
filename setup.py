@@ -11,6 +11,7 @@ print("pip install https://github.com/Rapptz/discord.py/archive/rewrite.zip#egg=
 
 REQUIRED = [
         "xdg",
+        "straight.plugin",
         ]
 #REQUIRED = [
         # Using this branch bc older ones don't work with 3.7

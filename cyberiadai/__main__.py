@@ -1,3 +1,6 @@
+# monkeypatches and other things that must go in the prelude
+from cyberiadai.hacks import monkeypatches
+
 import discord
 import asyncio
 import xdg
@@ -29,6 +32,7 @@ def loadconfig():
         
     config['DEFAULT'] = {
             'botkey': 'UNDEFINED',
+            'cmdprefix': '👀',
             }
     try:
         with open(cfilepath, "r") as cf:
@@ -40,29 +44,29 @@ def loadconfig():
     return CyberiadAIBot(config)
 
 def main():
-    
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
+    logging.getLogger('cyberiadai').setLevel(logging.DEBUG)
+    logging.getLogger('straight.plugin').setLevel(logging.DEBUG)
     
     bot = loadconfig()
-    client = bot.client
     bot.log.setLevel(logging.DEBUG)
     
-    @client.event
+    @bot.event
     async def on_ready():
-        bot.log.info('Logged in as {0.user}'.format(client))
+        bot.log.info('Logged in as {0.user}'.format(bot))
         
-    @client.event
-    async def on_message(message):
-        if message.content.startswith('!test'):
-            counter = 0
-            tmp = await message.channel.send('Calculating messages...')
-            async for log in message.channel.history(limit=100):
-                if log.author == message.author:
-                    counter += 1
-                    
-            await tmp.edit(content='You have {} messages.'.format(counter))
-        elif message.content.startswith('!sleep'):
-            await asyncio.sleep(5)
-            await message.channel.send('Done sleeping')
+#   @bot.event
+#   async def on_message(message):
+#       if message.content.startswith('!test'):
+#           counter = 0
+#           tmp = await message.channel.send('Calculating messages...')
+#           async for log in message.channel.history(limit=100):
+#               if log.author == message.author:
+#                   counter += 1
+#                   
+#           await tmp.edit(content='You have {} messages.'.format(counter))
+#       elif message.content.startswith('!sleep'):
+#           await asyncio.sleep(5)
+#           await message.channel.send('Done sleeping')
     
     bot.run()
