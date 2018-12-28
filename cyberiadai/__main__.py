@@ -8,8 +8,12 @@ import xdg
 import os
 import logging
 import configparser
+import signal
+import platform
+from collections import OrderedDict
 
 from .bot import CyberiadAIBot
+from .context import botinstance
 
 APP_DIRNAME = 'cyberiadai'
 
@@ -30,10 +34,19 @@ def loadconfig():
     config = configparser.ConfigParser()
     cfilepath = os.path.join(APP_CONFIG_PATH, "config.ini")
         
-    config['DEFAULT'] = {
-            'botkey': 'UNDEFINED',
-            'cmdprefix': '👀',
-            }
+    config['DEFAULT'] = OrderedDict([
+            ('botkey', 'UNDEFINED'),
+            ('cmdprefix', '👀'),
+            ('byondmsgport', 45678),
+            ('byondmsgpassword', 'UNDEFINED'),
+            ('byondmsghost', 'localhost'),
+            ('byondtimeout', '10'),
+            ('admin_channels', '000000000000000000,'),
+            ('admin_github_channels', '000000000000000000,'),
+            ('admin_ahelp_channels', '000000000000000000,'),
+            ('public_channels', '000000000000000000'),
+            ('public_github_channels', '000000000000000000,'),
+            ])
     try:
         with open(cfilepath, "r") as cf:
             config.read_file(cf)
@@ -43,30 +56,18 @@ def loadconfig():
     
     return CyberiadAIBot(config)
 
+
 def main():
     logging.basicConfig(level=os.environ.get("LOGLEVEL", "WARNING"))
     logging.getLogger('cyberiadai').setLevel(logging.DEBUG)
-    logging.getLogger('straight.plugin').setLevel(logging.DEBUG)
     
     bot = loadconfig()
     bot.log.setLevel(logging.DEBUG)
+    botinstance.set(bot)
     
-    @bot.event
-    async def on_ready():
-        bot.log.info('Logged in as {0.user}'.format(bot))
-        
-#   @bot.event
-#   async def on_message(message):
-#       if message.content.startswith('!test'):
-#           counter = 0
-#           tmp = await message.channel.send('Calculating messages...')
-#           async for log in message.channel.history(limit=100):
-#               if log.author == message.author:
-#                   counter += 1
-#                   
-#           await tmp.edit(content='You have {} messages.'.format(counter))
-#       elif message.content.startswith('!sleep'):
-#           await asyncio.sleep(5)
-#           await message.channel.send('Done sleeping')
+    signals = [signal.SIGHUP, signal.SIGTERM, signal.SIGINT]
+    if platform.system() == 'Windows':
+        signals.append([signal.CTRL_C_EVENT, signal.CTRL_BREAK_EVENT])
+    # add some kind of signals handler here
     
     bot.run()
